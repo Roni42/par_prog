@@ -1,52 +1,53 @@
 package main
 
-func _parQsort(_source []int, ch chan int) {
+import (
+	"runtime"
+	"sync"
+)
 
-	// source := make([]int, len(_source), len(_source))
-	// copy(source, _source)
-
-	l := len(_source)
-	if len(_source) >= 1 {
-		p1, p2 := partition(_source, 0, l)
-		less := make([]int, p1)
-		copy(less, _source[:p1])
-		great := make([]int, l-p2)
-		copy(great, _source[p2:])
-
-		ch1 := make(chan int, p1)
-		ch2 := make(chan int, l-p2)
-
-		if p1 > 1 {
-			go _parQsort(less, ch1)
-			println("panic ", p1, l)
-			for i := range ch1 {
-				ch <- i
-			}
-		} else if p1 == 1 {
-			ch <- _source[0]
-		}
-
-		for range p2 - p1 {
-			ch <- _source[p1]
-		}
-
-		if l-p2 > 1 {
-			go _parQsort(great, ch2)
-			for i := range ch2 {
-				ch <- i
-			}
-		} else if l-p2 == 1 {
-			ch <- _source[p1]
-		}
-	}
-
-	close(ch)
+type parSorter struct {
+	qsortBase
+	s seqSorter
 }
 
-func parQsort(arr []int) []int {
+func (p *parSorter) Sort(arr []int) {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	p.sort(arr, 0, len(arr), &wg, runtime.GOMAXPROCS(0))
+	wg.Wait()
+}
+
+func (p *parSorter) SortImm(arr []int) []int {
 	res := make([]int, len(arr))
 	copy(res, arr)
-	ch := make(chan int)
-	_parQsort(res, ch)
+	p.Sort(res)
 	return res
+}
+
+func (s *parSorter) sort(arr []int, from, to int, wg *sync.WaitGroup, maxDepth int) {
+	defer wg.Done()
+	// println("from to", from, to)
+
+	if maxDepth <= 0 {
+		s.s.sort(arr, from, to)
+		return
+	}
+
+	if from < to {
+		// println("in")
+
+		p1, p2 := s.partition(arr, from, to)
+		// printArr(arr, from, p1, false)
+		// printArr(arr, p1, to, false)
+		var wg1 sync.WaitGroup
+		if p1-from > 1 {
+			wg1.Add(1)
+			go s.sort(arr, from, p1, &wg1, maxDepth-1)
+		}
+		if to-p2 > 1 {
+			wg1.Add(1)
+			go s.sort(arr, p2, to, &wg1, maxDepth-1)
+		}
+		wg1.Wait()
+	}
 }

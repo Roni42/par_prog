@@ -6,30 +6,36 @@ import (
 	"time"
 )
 
-var cycles = 5
+func test(MAXN int, ARRLEN int) {
+	runtime.GOMAXPROCS(4)
+	var t1, t2 int = 0, 0
+
+	for i := 0; i < MAXN; i += 1 {
+		arr := genArray(int(ARRLEN))
+
+		var s seqSorter
+		s1 := time.Now()
+		sres := s.SortImm(arr)
+		e1 := int(time.Since(s1).Nanoseconds() / 1000000)
+		t1 += e1
+		println("1: ", e1, checkSorted(sres))
+
+		var p parSorter
+		s2 := time.Now()
+		pres := p.SortImm(arr)
+		e2 := int(time.Since(s2).Nanoseconds() / 1000000)
+		t2 += e2
+		println("2: ", e2, checkSorted(pres))
+		println("===")
+	}
+	seqTime, parTime := t1/MAXN, t2/MAXN
+
+	fmt.Printf("seq average time: %d, par average time: %d\n", seqTime, parTime)
+
+	var speedup float64 = float64(seqTime) / float64(parTime)
+	fmt.Printf("Speedup: %.2fx\n", speedup)
+}
 
 func main() {
-	runtime.GOMAXPROCS(4)
-
-	t1, t2 := 0, 0
-
-	for range cycles {
-		arr := genArray(1e1)
-
-		// s1 := time.Now()
-		// res1 := seqQsort(arr)
-		// t1 += int(time.Since(s1).Nanoseconds() / 1000000)
-		// if checkSorted(arr) || !checkSorted(res1) {
-		// 	panic("broken sort")
-		// }
-
-		s2 := time.Now()
-		parQsort(arr)
-		t2 += int(time.Since(s2).Nanoseconds() / 1000000)
-		if !checkSorted(arr) {
-			panic("broken sort")
-		}
-
-	}
-	fmt.Println("result: ", t1/cycles, " vs ", t2/cycles)
+	test(5, 1e8)
 }

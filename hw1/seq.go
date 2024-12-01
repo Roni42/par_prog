@@ -1,20 +1,28 @@
 package main
 
-func _seqQsort(source []int, from, to int) {
+type seqSorter struct {
+	qsortBase
+}
+
+func (s *seqSorter) sort(arr []int, from, to int) {
 	if from < to {
-		p1, p2 := partition(source, from, to)
+		p1, p2 := s.partition(arr, from, to)
 		if p1-from > 1 {
-			_seqQsort(source, from, p1)
+			s.sort(arr, from, p1)
 		}
 		if to-p2 > 1 {
-			_seqQsort(source, p2, to)
+			s.sort(arr, p2, to)
 		}
 	}
 }
 
-func seqQsort(arr []int) []int {
-	res := make([]int, len(arr), len(arr))
+func (s *seqSorter) Sort(arr []int) {
+	s.sort(arr, 0, len(arr))
+}
+
+func (s *seqSorter) SortImm(arr []int) []int {
+	res := make([]int, len(arr))
 	copy(res, arr)
-	_seqQsort(res, 0, len(arr))
+	s.Sort(res)
 	return res
 }
