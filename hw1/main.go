@@ -26,6 +26,8 @@ func test(MAXN int, ARRLEN int) {
 		e2 := int(time.Since(s2).Nanoseconds() / 1000000)
 		t2 += e2
 		println("2: ", e2, checkSorted(pres))
+		fmt.Printf("Speedup: %.2fx\n", float64(e1)/float64(e2))
+
 		println("===")
 	}
 	seqTime, parTime := t1/MAXN, t2/MAXN
