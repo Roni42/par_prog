@@ -3,8 +3,18 @@ package main
 import (
 	"fmt"
 	"runtime"
+	"strconv"
 	"time"
 )
+
+func run(arr []int, name string, s sorter) int {
+	stTime := time.Now()
+	sres := s.SortImm(arr)
+	runTime := int(time.Since(stTime).Nanoseconds() / 1000000)
+	println(name, ": ", runTime, "| is sorted: ", checkSorted(sres))
+	return runTime
+
+}
 
 func test(MAXN int, ARRLEN int) {
 	runtime.GOMAXPROCS(4)
@@ -13,19 +23,11 @@ func test(MAXN int, ARRLEN int) {
 	for i := 0; i < MAXN; i += 1 {
 		arr := genArray(int(ARRLEN))
 
-		var s seqSorter
-		s1 := time.Now()
-		sres := s.SortImm(arr)
-		e1 := int(time.Since(s1).Nanoseconds() / 1000000)
+		e1 := run(arr, strconv.Itoa(i+1)+"_seq", &seqSorter{})
 		t1 += e1
-		println("1: ", e1, checkSorted(sres))
-
-		var p parSorter
-		s2 := time.Now()
-		pres := p.SortImm(arr)
-		e2 := int(time.Since(s2).Nanoseconds() / 1000000)
+		e2 := run(arr, strconv.Itoa(i+1)+"_par", &parSorter{})
 		t2 += e2
-		println("2: ", e2, checkSorted(pres))
+
 		fmt.Printf("Speedup: %.2fx\n", float64(e1)/float64(e2))
 
 		println("===")

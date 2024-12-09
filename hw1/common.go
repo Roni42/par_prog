@@ -3,6 +3,7 @@ package main
 type sorter interface {
 	partition(arr []int, from, to int) (int, int)
 	Sort(arr []int)
+	SortImm(arr []int) []int
 }
 
 type qsortBase struct{}
